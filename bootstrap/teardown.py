@@ -14,7 +14,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from bootstrap import load_cfg, issue_repos  # noqa: E402
+from bootstrap import load_cfg, issue_repos, subteams  # noqa: E402
 
 
 def gh(*a):
@@ -31,7 +31,7 @@ def main():
     for r in repos:
         res = gh("repo", "delete", f"{org}/{r}", "--yes")
         print(("删除仓库 " if res.returncode == 0 else "跳过仓库 ") + r)
-    for t in ["training", "gke", "network", "customer", "maintainers", "googlers", "partners", "observers"]:
+    for t in subteams(cfg) + ["customer", "maintainers", "googlers", "partners", "observers"]:
         res = gh("api", "-X", "DELETE", f"orgs/{org}/teams/{t}")
         print(("删除团队 " if res.returncode == 0 else "跳过团队 ") + t)
     q = '{organization(login:"%s"){projectsV2(first:50){nodes{id title}}}}' % org

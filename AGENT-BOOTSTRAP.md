@@ -48,6 +48,12 @@
 | 客户模型叫什么、开发分支叫什么、阶段叫什么 | `model`、`dev_branch`、`phase` | 开发分支名不带代数（第 9 章 9.3） |
 | 有没有固定路由（某类 issue 固定给某人） | `fixed_route` | 没有就删掉这段 |
 | 开不开 GitHub Actions | `actions` | `disabled`（第 14 章 14.3） |
+| 领域和原项目（TPU 训练 + GKE + 网络）一样吗？ | `domain` | 不一样就 `other` |
+| 客户分几个组？各组叫什么？各能看哪个 issue 仓？ | `customer_groups` | 领域一样就不写（默认 training / gke / network） |
+| 两个 issue 仓各管什么（一句话）、例会叫什么、看板视图叫什么 | `repo_desc`、`meeting_titles`、`view_names` | 领域一样就不写 |
+| org 名的来历（主页第一句）、自研工具的命名主题 | 写进第 3 步的主页和 wiki README | 「项目代号」；命名主题待定 |
+| 上游副本多久同步一次、谁负责、冒烟命令 | 写进第 3 步的 `FORK-<仓库>.md` | 每两周；负责人和冒烟命令写「待定」并告诉用户 |
+| 代码仓客户能不能写 | `code_repos[].joint` | 能（true） |
 
 规矩：
 
@@ -78,11 +84,28 @@ plan 报错时：
 python3 bootstrap/bootstrap.py render org-config.yaml     # 输出到 /tmp/<org>-render
 ```
 
-render 只做机械替换（org 名、模型名、分支名、厂商名、阶段名、固定路由账号、同步目标）。**和领域有关的内容要你来改**，在渲染目录里改：
+render 只做机械替换（org 名、模型名、分支名、厂商名、阶段名、固定路由账号、同步目标、自研仓的 README）。**和领域有关的内容要你来改**，在渲染目录里改。
+
+⚠ 改完之后**不要再跑 render**：渲染目录已存在时 render 会拒绝，加 `--force` 才会重来，而重来会丢掉你的改写。apply 直接用渲染目录。
 
 1. 先读 [`appendix/A-AGENTS.md`](appendix/A-AGENTS.md) 的「换领域：要改的地方一张表」
 2. 新客户的领域**和原项目一样**（TPU 训练 + GKE + 网络）：只改下面第 5 条，其余不动
-3. 领域不同：按那张表逐个改 `templates/AGENTS.md`、两套 issue 模板的下拉选项、`scripts/setup-labels.sh` 的 `area/*`、两个 issue 仓的 README、org 主页。**`AGENTS.md` 里的模板表和下拉枚举必须和 `.github/ISSUE_TEMPLATE/` 里的文件逐字一致**
+3. 领域不同（`domain: other`）：下面这张表里的每个文件都要过一遍。**`AGENTS.md` 里的模板表和下拉枚举必须和 `.github/ISSUE_TEMPLATE/` 里的文件逐字一致**——建议写个小脚本从一份数据同时生成两边
+
+   | 渲染目录里的文件 | 改什么 |
+   |---|---|
+   | `templates/AGENTS.md` | 开头的范围；两个仓库的划界表；`area/*` 和「跟哪块有关」的映射；两张模板表和下拉枚举；运行条件举例；代码仓名和分支；第 5 节（数值类条目，不做数值的删掉） |
+   | `templates/issue-repo-*/ISSUE_TEMPLATE/*.yml`（13 个）| 下拉选项、description、placeholder；领域里没有「精度」的删掉 `2-accuracy.yml` 并在 AGENTS 模板表里同步删 |
+   | `templates/issue-repo-*/ISSUE_TEMPLATE/config.yml` | 链接的 `name` 和 `about` |
+   | `scripts/setup-labels.sh` | `area/*`、`type/perf` 的描述 |
+   | `templates/issue-repo-*/README.md` | 「这里提什么」 |
+   | `templates/issue-repo-*/{library,meetings,recipes,repro}-README.md`（8 个）| 样例行换成空表；训练仓的 `repro-README.md` 里 `launch.sh`、`card.yaml` 字段按你的运行方式改（第 10 章 10.3） |
+   | `templates/meeting-log-issue-*.md`、`templates/meetings-notes-template-*.md` | 方向名（「训练」「GKE」） |
+   | `templates/code-repo/pull_request_template.md` | 「数值影响」一栏：不涉及数值就整栏删掉（`pr-check.py` 只在加 `--numeric` 时才查它） |
+   | `README-<自研仓>.md`、`FORK-<上游仓>.md` | 每个仓库一份，分别写 |
+   | `templates/wiki/README.md` | 「这个 org 管什么」；命名主题 |
+   | `templates/wiki/onboarding/*.md`、`templates/wiki/ISSUE_TEMPLATE/access.yml` | 仓库表、团队名和组名、`<Owner 账号列表>`；`permissions.md` 里和 CI 相关的一节按 Actions 的决定改 |
+   | `templates/org-profile/README.md` | 两组按钮上的划界、模板表、「正在做」、仓库表 |
 4. `issue_repos: one` 时：按第 2 章 2.3「只有一个 issue 仓时」删掉 `templates/AGENTS.md` 里关于第二个仓库的段落（转移规则、跨仓库可见性、infra 的标签和模板表）
 5. 每个项目都要改的：
    - `templates/org-profile/README.md`：org 名来历、「正在做」、仓库表
@@ -94,7 +117,11 @@ render 只做机械替换（org 名、模型名、分支名、厂商名、阶段
 
 ```bash
 W=/tmp/<org>-render
-grep -rniI 'northpeak\|modelx\|<上游对接人账号>\|numerics-kit\|gke-component' $W/templates $W/scripts   # 应为空（或只剩你确认要保留的）
+grep -rniI --exclude=FORK.md 'northpeak\|modelx\|<上游对接人账号>\|numerics-kit\|gke-component' $W   # 应为空（templates/FORK.md 是样例原文，脚本靠它判断你改没改 FORK，别动它）
+# 领域不同时再查原项目的领域词（只剩你确认要保留的）
+grep -rnI --exclude=FORK.md 'TPU\|MaxText\|libtpu\|GKE\|v5p\|v7x' $W/templates $W/*.md | grep -v '^.*:#' | head -50
+# 没填的占位符
+grep -rnoI --exclude=FORK.md '<[^<>/!]\{1,20\}>' $W/templates $W/*.md | grep -P '<[^>]*[\x{4e00}-\x{9fff}]' | head -50
 python3 -c 'import yaml,glob; [yaml.safe_load(open(f)) for f in glob.glob("'$W'/templates/**/*.yml",recursive=True)]' && echo YAML ok
 ```
 
@@ -111,6 +138,7 @@ python3 bootstrap/verify.py org-config.yaml
 - 只想重做某几步：`--only wiki,issue-repos`（步骤名见 `bootstrap.py` 顶部的 `STEPS`）
 - 建站期间 apply 会**直接推默认分支**（这时还没有可以关联的 issue）。建站完成后，一切改动按 `AGENTS.md` 走 issue 和 PR
 - verify 有 FAIL 就修，修完重跑 verify，直到 0 FAIL。WARN 逐条看，写进给用户的汇报
+- **verify 全过不等于领域改写做完了**：它只抽查关键文件里的领域词和占位符（`domain: other` 时）。第 3 步的表要你自己逐个过
 
 apply 做的事，对应第 15 章：
 

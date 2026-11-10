@@ -43,6 +43,10 @@ def content(org, repo, path, ref=None):
     return base64.b64decode(c).decode("utf-8", "replace") if c else None
 
 
+def c_name_is_code_readme(repo, path, cfg):
+    return path == "README.md" and any(c["name"] == repo for c in cfg["code_repos"])
+
+
 def main():
     cfg = load_cfg(sys.argv[1])
     org = cfg["org"]
@@ -91,16 +95,17 @@ def main():
         p = ghj("api", f"orgs/{org}/teams/{team}/repos/{org}/{repo}", "-H", "Accept: application/vnd.github.v3.repository+json")
         return (p or {}).get("role_name")
     want = [("maintainers", "wiki", "admin"), ("googlers", "wiki", "maintain"), ("customer", "wiki", "write"),
-            ("training", "project-management", "write"), ("observers", "project-management", "read")]
-    if cfg["issue_repos"] == "two":
-        want += [("gke", "project-management-infra", "write"), ("network", "project-management-infra", "write"),
-                 ("training", "project-management-infra", "write")]
+            ("observers", "project-management", "read")]
+    for g in cfg["customer_groups"]:
+        want += [(g["team"], r, "write") for r in g["repos"]]
     for t, r, p in want:
         got = perm(t, r)
         check(f"授权 {t} → {r} = {p}", got == p, f"实际 {got}")
     check("customer 父团队对 project-management 无直接授权", perm("customer", "project-management") in (None, ""), warn=True)
-    if cfg["issue_repos"] == "two":
-        check("gke 看不到 project-management", perm("gke", "project-management") in (None, ""))
+    for g in cfg["customer_groups"]:
+        for r in issue_repos(cfg):
+            if r not in g["repos"]:
+                check(f"{g['team']} 看不到 {r}", perm(g["team"], r) in (None, ""))
 
     # 标签
     want_labels = {"type/bug", "type/feat", "type/docs", "type/chore", "size/S", "size/L", "P0", "tracker"}
@@ -147,10 +152,34 @@ def main():
     # 例会记录 issue
     for r in issue_repos(cfg):
         i = ghj("api", f"repos/{org}/{r}/issues/1") or {}
-        check(f"{r}#1 是例会记录 issue", "例会" in (i.get("title") or ""), i.get("title") or "不存在")
+        check(f"{r}#1 是例会记录 issue", (i.get("title") or "") == cfg["meeting_titles"][r], i.get("title") or "不存在")
 
     # 主页
-    check(".github-private/profile/README.md", content(org, ".github-private", "profile/README.md") is not None)
+    prof = content(org, ".github-private", "profile/README.md")
+    check(".github-private/profile/README.md", prof is not None)
+
+    # 领域残留与占位符（换了领域的项目才查残留；占位符一律查）
+    import re as _re
+    key_files = [("wiki", "AGENTS.md"), ("wiki", "README.md"), (".github-private", "profile/README.md")]
+    for r in issue_repos(cfg):
+        key_files += [(r, "README.md"), (r, "library/README.md"), (r, "recipes/README.md"), (r, "repro/README.md"),
+                      (r, ".github/ISSUE_TEMPLATE/1-bug.yml"), (r, ".github/ISSUE_TEMPLATE/config.yml")]
+    for c in cfg["code_repos"]:
+        key_files += [(c["name"], "README.md" if c["kind"] == "own" else "FORK.md"), (c["name"], ".github/pull_request_template.md")]
+    residue = ["TPU", "MaxText", "libtpu", "JAX", "Pallas", "Tokamax", "GKE", "numerics-kit", "gke-component", "v5p", "v7x"]
+    for repo, path in key_files:
+        txt = content(org, repo, path, None) or ""
+        ph = sorted(set(_re.findall(r"<(?:[^<>\n/!]{1,30})>", txt)) - {"org", "repo"})
+        ph = [x for x in ph if any("\u4e00" <= ch <= "\u9fff" for ch in x)]
+        syntax_files = ("AGENTS.md", "repro/README.md", ".github/pull_request_template.md")
+        if c_name_is_code_readme(repo, path, cfg):
+            ph = []
+        if ph and not path.endswith(syntax_files) and path != "README.md" or (ph and repo == "wiki" and path == "README.md") or (ph and repo == ".github-private"):
+            check(f"{repo}/{path} 没有未填的占位符", False, "、".join(ph[:6]), warn=True)
+        if cfg["domain"] == "other":
+            hit = [w for w in residue if w in txt]
+            if hit:
+                check(f"{repo}/{path} 没有原项目领域的残留", False, "、".join(hit), warn=True)
 
     # 看板
     q = '{organization(login:"%s"){projectsV2(first:20){nodes{title public number readme workflows(first:20){nodes{name enabled}} views(first:20){nodes{name filter}} fields(first:50){nodes{... on ProjectV2SingleSelectField{name options{name}}}}}}}}' % org
@@ -168,7 +197,7 @@ def main():
             check(f"看板规则「{w}」打开", wf.get(w) is True)
         filters = " ".join(v["filter"] or "" for v in p["views"]["nodes"])
         check("看板视图筛选指向本 org", "northpeak" not in filters and (org in filters or cfg["issue_repos"] == "one"), filters)
-        check("看板 board.sh id 与实际看板一致", board_sh.count("PVT_") >= 1, warn=True)
+        check("主页里的看板链接指向这块看板", f"/orgs/{org}/projects/{p['number']}" in (prof or ""), f"看板是 #{p['number']}")
 
     # 汇总
     fails = [r for r in RESULTS if r[0] == "FAIL"]
@@ -177,11 +206,13 @@ def main():
     print("""
 需要人核的（脚本做不了）：
   [ ] 邀请都已接受：gh api orgs/%s/invitations 为空
-  [ ] 用客户 GKE 组账号打开 project-management → 404（issue_repos 为 two 时）
-  [ ] 用客户训练组账号打开 wiki、代码仓、两个 issue 仓 → 都能打开、能提 issue（验证子团队继承）
+%s
   [ ] 用客户账号打开 https://github.com/%s → 看到成员版主页，按钮图片能显示
   [ ] 两个 issue 仓的 issues/new/choose 页面，每个模板都能点开
-  [ ] 让一个 AI 助手「先读 AGENTS.md，再提一个 issue」，模板字段、标签、看板都对""" % (org, org))
+  [ ] 让一个 AI 助手「先读 AGENTS.md，再提一个 issue」，模板字段、标签、看板都对""" % (org, "\n".join(
+        f"  [ ] 用客户 {g['team']} 组（{g['desc']}）的账号打开 " + "、".join(g["repos"]) + " 和 wiki → 都能打开、能提 issue"
+        + ("；打开 " + "、".join(r for r in issue_repos(cfg) if r not in g["repos"]) + " → 404" if any(r not in g["repos"] for r in issue_repos(cfg)) else "")
+        for g in cfg["customer_groups"]), org))
     sys.exit(1 if fails else 0)
 
 

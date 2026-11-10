@@ -162,7 +162,7 @@ gh api repos/northpeak/wiki/contents/scripts/board.sh --jq .content | base64 -d 
 
 ## 3. 分支和提交
 
-- 分支名：`<type>/<issue号>-<英文短横线简述>`，如 `feat/42-modelx-vl-encoder`。type 用 `feat`、`fix`（对应 `type/bug`、`type/accuracy`）、`perf`、`docs`、`chore`；issue 在 `project-management-infra` 的，号前加 `infra-`，如 `fix/infra-12-node-repair`
+- 分支名：`<type>/<issue号>-<英文短横线简述>`，如 `feat/42-vision-encoder`。type 用 `feat`、`fix`（对应 `type/bug`、`type/accuracy`）、`perf`、`docs`、`chore`；issue 在 `project-management-infra` 的，号前加 `infra-`，如 `fix/infra-12-node-repair`
 - 分支推在**本仓库**，不要从个人 fork 提 PR（外部 fork 的 PR 触发不了验证）
 - 上游项目的私有副本（如 `maxtext`，以及 `gke-component-a`、`gke-component-b`、`gke-component-c`、`gke-component-d`、`tpu-device-plugin` 这些 GKE 组件）：分支和同步规矩以仓库根目录的 `FORK.md` 为准
 - 提交信息第一行：`<type>: <简述>`；正文写为什么改。不要把正文内联在命令行里，用 `git commit -F <文件>`

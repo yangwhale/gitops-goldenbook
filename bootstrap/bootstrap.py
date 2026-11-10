@@ -97,6 +97,20 @@ def load_cfg(path):
     cfg.setdefault("code_repos", [])
     cfg.setdefault("actions", "disabled")
     cfg.setdefault("board_template", "https://github.com/users/yangwhale/projects/1")
+    cfg.setdefault("domain", "same")
+    if not cfg.get("customer_groups"):
+        if cfg["issue_repos"] == "two":
+            cfg["customer_groups"] = [
+                {"team": "training", "desc": "客户训练组", "repos": ["project-management", "project-management-infra"]},
+                {"team": "gke", "desc": "客户 GKE 组", "repos": ["project-management-infra"]},
+                {"team": "network", "desc": "客户网络组", "repos": ["project-management-infra"]}]
+        else:
+            cfg["customer_groups"] = [{"team": "training", "desc": "客户工程师", "repos": ["project-management"]}]
+    cfg.setdefault("repo_desc", {})
+    cfg["repo_desc"].setdefault("project-management", "训练与推理的 issue；这一方向的文档、例会纪要、配方和复现")
+    cfg["repo_desc"].setdefault("project-management-infra", "GKE 与网络的 issue；这一方向的文档、例会纪要、配方和复现")
+    cfg.setdefault("meeting_titles", {"project-management": "训练例会记录", "project-management-infra": "基础设施例会记录"})
+    cfg.setdefault("view_names", {})
     example = {"alice-g", "bob-g", "carol-c", "dave-c", "erin-g", "frank-c"}
     flat = [p for ps in (cfg["members"] or {}).values() for p in (ps or [])] + list(cfg["owners"])
     bad = [p for p in flat if p in example or p.startswith("<")]
@@ -120,7 +134,7 @@ def issue_repos(cfg):
 
 
 def subteams(cfg):
-    return ["training", "gke", "network"] if cfg["issue_repos"] == "two" else ["training"]
+    return [g["team"] for g in cfg["customer_groups"]]
 
 
 # ───────────────────────── render ─────────────────────────
@@ -128,6 +142,8 @@ def render(cfg):
     """把 appendix/ 拷到工作目录，做纯机械的替换。语义改写留给 bot（AGENT-BOOTSTRAP.md 第 3 步）。"""
     W = cfg["work"]
     if os.path.exists(W):
+        if "--force" not in sys.argv:
+            die(f"渲染目录 {W} 已存在，里面可能有你改写过的内容。确定要重来就加 --force（会丢掉改写）")
         shutil.rmtree(W)
     shutil.copytree(os.path.join(BOOK, "appendix"), W)
     org = cfg["org"]
@@ -169,6 +185,10 @@ def render(cfg):
     for c in cfg["code_repos"]:
         if c["kind"] != "own":
             shutil.copyfile(os.path.join(W, "templates/FORK.md"), os.path.join(W, f"FORK-{c['name']}.md"))
+        else:
+            t = open(os.path.join(W, "templates/code-repo/README.md"), encoding="utf-8").read()
+            open(os.path.join(W, f"README-{c['name']}.md"), "w", encoding="utf-8").write(
+                t.replace("<仓库名>", c["name"]).replace("<一句话：这个仓库是什么>", c.get("description", "<一句话：这个仓库是什么>")))
     left = run(f"grep -rliI 'northpeak\\|modelx' {W} || true")
     say(f"✓ 已渲染到 {W}")
     if left:
@@ -220,11 +240,11 @@ TEAM_DESC = {
 }
 
 
-def ensure_team(org, name, parent_id=None):
+def ensure_team(org, name, parent_id=None, desc=None):
     if exists(f"orgs/{org}/teams/{name}"):
         return gh("api", f"orgs/{org}/teams/{name}", "--jq", ".id")
     args = ["api", "-X", "POST", f"orgs/{org}/teams", "-f", f"name={name}", "-f",
-            f"description={TEAM_DESC[name]}", "-f", "privacy=closed", "--jq", ".id"]
+            f"description={desc or TEAM_DESC.get(name, name)}", "-f", "privacy=closed", "--jq", ".id"]
     if parent_id:
         args += ["-F", f"parent_team_id={parent_id}"]
     return gh(*args, write=True) or "<new>"
@@ -234,9 +254,9 @@ def step_teams(cfg):
     org = cfg["org"]
     for t in ["maintainers", "googlers", "customer", "partners", "observers"]:
         ensure_team(org, t)
-    cust = gh("api", f"orgs/{org}/teams/customer", "--jq", ".id", check=False) or "<customer-id>"
-    for t in subteams(cfg):
-        ensure_team(org, t, cust)
+    cust = gh("api", f"orgs/{org}/teams/customer", "--jq", ".id", check=False) if exists(f"orgs/{org}/teams/customer") else "<customer-id>"
+    for g in cfg["customer_groups"]:
+        ensure_team(org, g["team"], cust, f"{g['desc']}（继承 customer 的全部仓库权限）")
     # 建团队的人自动进了每个团队；一人只进一个团队（第 3 章 3.4）
     me = cfg.get("me") or gh("api", "user", "--jq", ".login")
     home = next((t for t, ps in cfg["members"].items() if me in (ps or [])), "maintainers")
@@ -263,9 +283,8 @@ def ensure_repo(org, name, desc, issues, readme=True):
 def step_repos(cfg):
     org = cfg["org"]
     ensure_repo(org, "wiki", "规矩（AGENTS.md）、守则、RFC、新人入门；规矩和权限的 issue", True)
-    ensure_repo(org, "project-management", "训练与推理的 issue；这一方向的文档、例会纪要、配方和复现", True)
-    if cfg["issue_repos"] == "two":
-        ensure_repo(org, "project-management-infra", "GKE 与网络的 issue；这一方向的文档、例会纪要、配方和复现", True)
+    for r in issue_repos(cfg):
+        ensure_repo(org, r, cfg["repo_desc"][r], True)
     ensure_repo(org, ".github-private", "org 主页（成员可见）", False)
     for c in cfg["code_repos"]:
         name = c["name"]
@@ -300,13 +319,12 @@ def step_grants(cfg):
         grant(org, "customer", r, "push")
         grant(org, "observers", r, "pull")
     grant(org, "partners", "wiki", "push")
-    grant(org, "training", "project-management", "push")
-    grant(org, "observers", "project-management", "pull")
+    for g in cfg["customer_groups"]:
+        for r in g["repos"]:
+            grant(org, g["team"], r, "push")
+    for r in issue_repos(cfg):
+        grant(org, "observers", r, "pull")
     grant(org, "partners", "project-management", "triage")
-    if cfg["issue_repos"] == "two":
-        for t in ["training", "gke", "network"]:
-            grant(org, t, "project-management-infra", "push")
-        grant(org, "observers", "project-management-infra", "pull")
     grant(org, "maintainers", ".github-private", "maintain")
     for t in ["googlers", "customer", "partners", "observers"]:
         grant(org, t, ".github-private", "pull")
@@ -324,18 +342,16 @@ def step_labels(cfg):
     say("✓ labels：" + "、".join(r for r, _ in roles))
 
 
-MEETING = {"project-management": ("训练例会记录", "meeting-log-issue-training.md"),
-           "project-management-infra": ("基础设施例会记录", "meeting-log-issue-infra.md")}
+MEETING = {"project-management": "meeting-log-issue-training.md",
+           "project-management-infra": "meeting-log-issue-infra.md"}
 
 
 def step_meeting_issues(cfg):
     org = cfg["org"]
     for r in issue_repos(cfg):
-        title, body = MEETING[r]
-        num = gh("issue", "list", "-R", f"{org}/{r}", "-s", "all", "--search", f"in:title {title}",
-                 "--json", "number,title", "--jq", f'.[]|select(.title=="{title}")|.number', check=False)
-        if num:
-            say(f"  {r} 已有例会记录 issue #{num.splitlines()[0]}")
+        title, body = cfg["meeting_titles"][r], MEETING[r]
+        if exists(f"repos/{org}/{r}/issues/1"):
+            say(f"  {r} 已有 1 号 issue（例会记录），跳过")
             continue
         url = gh("issue", "create", "-R", f"{org}/{r}", "--title", title, "--label", "type/docs",
                  "--body-file", os.path.join(cfg["work"], "templates", body), write=True)
@@ -442,6 +458,9 @@ def step_board(cfg):
     info = graphql('query($p:ID!){node(id:$p){... on ProjectV2{number views(first:20){nodes{id name filter}} fields(first:50){nodes{... on ProjectV2SingleSelectField{id name options{id name}}}}}}}', p=pid)["node"]
     # 视图筛选、README、可见性
     for v in info["views"]["nodes"]:
+        new_name = cfg["view_names"].get(v["name"])
+        if new_name and not DRY:
+            graphql('mutation($v:ID!,$n:String!){updateProjectV2View(input:{viewId:$v,name:$n}){projectV2View{id}}}', v=v["id"], n=new_name)
         if v["filter"] and "northpeak" in v["filter"]:
             if cfg["issue_repos"] == "one" and "infra" in v["name"] + v["filter"] and "-repo" not in v["filter"]:
                 gh("api", "graphql", "-f", f'query=mutation{{deleteProjectV2View(input:{{viewId:"{v["id"]}"}}){{deletedViewId}}}}', write=True)
@@ -476,6 +495,11 @@ def step_board(cfg):
     s = re.sub(r"^declare -A SIZE=.*$", f"declare -A SIZE=({zo})", s, flags=re.M)
     open(bs, "w", encoding="utf-8").write(s)
     push_files(cfg, "wiki", {"scripts/board.sh": bs}, "chore: board.sh 填入看板 id（bootstrap）")
+    prof = os.path.join(cfg["work"], "templates/org-profile/README.md")
+    ps = open(prof, encoding="utf-8").read()
+    ps2 = re.sub(rf"github.com/orgs/{re.escape(org)}/projects/\d+", f"github.com/orgs/{org}/projects/{info['number']}", ps)
+    if ps2 != ps:
+        open(prof, "w", encoding="utf-8").write(ps2)
     # 例会记录 issue 进看板
     for r in issue_repos(cfg):
         url = f"https://github.com/{org}/{r}/issues/1"
@@ -497,7 +521,7 @@ def step_code_repos(cfg):
              ".github/pull_request_template.md": f"{T}/code-repo/pull_request_template.md",
              ".github/CODEOWNERS": f"{T}/code-repo/CODEOWNERS"}
         if c["kind"] == "own":
-            f["README.md"] = f"{T}/code-repo/README.md"
+            f["README.md"] = os.path.join(cfg["work"], f"README-{c['name']}.md")
         else:
             fork = os.path.join(cfg["work"], f"FORK-{c['name']}.md")
             if not os.path.exists(fork):
@@ -509,7 +533,8 @@ def step_code_repos(cfg):
         dev = [b for b in (c.get("agents_branches") or []) if b != c.get("default_branch", "main")]
         for b in dev:
             if not exists(f"repos/{cfg['org']}/{c['name']}/branches/{b}"):
-                sha = gh("api", f"repos/{cfg['org']}/{c['name']}/git/ref/heads/{c.get('default_branch', 'main')}", "--jq", ".object.sha", check=False)
+                ref = f"repos/{cfg['org']}/{c['name']}/git/ref/heads/{c.get('default_branch', 'main')}"
+                sha = gh("api", ref, "--jq", ".object.sha", check=False) if exists(ref) else ("<default-branch-sha>" if DRY else "")
                 if sha:
                     gh("api", "-X", "POST", f"repos/{cfg['org']}/{c['name']}/git/refs", "-f", f"ref=refs/heads/{b}", "-f", f"sha={sha}", write=True)
                     say(f"  {c['name']}：{'（plan）将' if DRY else ''}从默认分支拉出开发分支 {b}")
@@ -542,7 +567,7 @@ def step_invite(cfg):
             if not uid:
                 say(f"  ⚠ 账号 {p} 不存在，跳过")
                 continue
-            tid = gh("api", f"orgs/{org}/teams/{team}", "--jq", ".id", check=False) or "0"
+            tid = gh("api", f"orgs/{org}/teams/{team}", "--jq", ".id", check=False) if exists(f"orgs/{org}/teams/{team}") else "<team-id>"
             role = "admin" if p in cfg["owners"] else "direct_member"
             gh("api", "-X", "POST", f"orgs/{org}/invitations", "-F", f"invitee_id={uid}", "-F", f"team_ids[]={tid}",
                "-f", f"role={role}", write=True)

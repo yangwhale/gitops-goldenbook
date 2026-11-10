@@ -60,7 +60,7 @@
 |---|---|
 | 开着的问题 | [org 里所有未关闭的 issue](https://github.com/issues?q=org%3Anorthpeak%20is%3Aissue%20is%3Aopen) |
 | 看板 | [NorthPeak 看板](https://github.com/orgs/northpeak/projects/1) |
-| 实施手册 | [project-management / recipes / modelx-poc](https://github.com/northpeak/project-management/tree/main/recipes/modelx-poc) |
+| 实施手册 | <链到 recipes/ 里的主配方> |
 | 代码 | [maxtext · `modelx` 分支](https://github.com/northpeak/maxtext/tree/modelx) |
 
 ## 仓库

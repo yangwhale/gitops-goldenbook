@@ -57,3 +57,6 @@
 | O10 | 终检：去标识、链接、脚本测试、README 定稿 | 完成：敏感词 0 命中；20 个 YAML 可解析；脚本语法与正反例测试通过；链接与章节引用 0 问题；历史压成单个提交 |
 | 优化 | B01 | 给 bot 的入口：AGENT-BOOTSTRAP.md；org-config 配置；bootstrap.py（plan/render/apply）；verify.py；公开的看板模板项目 | 完成 |
 | 优化 | B02 | 在空沙箱 org 实跑：apply 一次成功、verify 118/118、重跑幂等、smoke.py 5/5；补 smoke.py、teardown.py | 完成 |
+| 优化 | B03 | 第 15 章指向脚本化路径 | 完成 |
+| 优化 | B04 | 派 agent 扮演新同事的 bot，只读公开书，给一个**不同领域**（GPU 推理 + 自建 K8s）的虚构客户从零建 org：verify 118/118、smoke 5/5，但找出 9 处问题（客户组名写死、主页看板链接写死、改写清单漏约十类文件、verify 不查领域残留、render 会抹掉改写等） | 完成 |
+| 优化 | B05 | 按 B04 修：客户组、仓库描述、例会标题、视图名可配置；主页看板链接自动回填；render 不覆盖已改写目录；改写清单按文件列全；verify 加领域残留和占位符检查、按客户组生成人工核对清单；自研仓各自生成 README；plan 输出不再打印错误 id；不同领域配置在沙箱重跑：apply 成功、verify 0 FAIL（23 个 WARN 正好对应没改写的领域内容）、smoke 5/5 | 完成 |

@@ -15,8 +15,8 @@ issue_repos: two
 # 必填。Owner 账号（只有 Owner 能邀请成员）。运行脚本的人必须是其中之一
 owners: [<你的 GitHub 账号>]
 
-# 成员按团队列。一人只进一个团队。客户同时做训练和 GKE 的只进 training
-# issue_repos 为 one 时，客户全放 training（脚本会把它当作唯一的客户子团队）
+# 成员按团队列。一人只进一个团队。客户同时属于两个组的，放进能看两个 issue 仓的那个组
+# 客户组的团队名以 customer_groups 为准（默认 training / gke / network）
 members:
   maintainers: [<你的 GitHub 账号>]     # Owner 也放这里
   googlers: []               # 厂商工程师的 GitHub 账号
@@ -25,6 +25,24 @@ members:
   network: []
   partners: []
   observers: []
+
+# 和原项目领域一样（TPU 训练 + GKE + 网络）写 same；不一样写 other（verify 会额外查原项目领域词的残留）
+domain: same
+
+# 客户分组（可选）。不写就用原项目的：two 时 training（两个 issue 仓都能看）、gke、network（只看 infra 仓）；one 时只有 training。
+# 领域不同就按你的客户组改。team 是 GitHub 团队名（英文短横线，不带 customer- 前缀）；repos 是这个组能看、能提的 issue 仓
+# customer_groups:
+#   - {team: engine,   desc: 客户推理引擎组, repos: [project-management, project-management-infra]}
+#   - {team: platform, desc: 客户平台组,     repos: [project-management-infra]}
+
+# 两个 issue 仓的描述、例会记录 issue 的标题、看板视图改名（可选，领域不同时改）
+# repo_desc:
+#   project-management: 推理引擎的 issue；这一方向的文档、例会纪要、配方和复现
+#   project-management-infra: 平台（K8s、网络、存储）的 issue；这一方向的文档、例会纪要、配方和复现
+# meeting_titles:
+#   project-management: 推理引擎例会记录
+#   project-management-infra: 平台例会记录
+# view_names: {训练与推理: 推理引擎, 基础设施: 推理平台}
 
 # 代码仓。kind：own（自研，空仓起步）| long-fork（长期分叉的上游副本）| follow（跟随上游的副本）
 # joint: true 表示客户可写（customer 团队 Write）；false 表示只有厂商能看
