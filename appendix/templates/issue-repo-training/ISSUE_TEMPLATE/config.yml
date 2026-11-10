@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+- name: GKE on TPU、网络、集群层面的问题
+  url: https://github.com/northpeak/project-management-infra/issues/new/choose
+  about: 切片、device plugin、Kueue / JobSet、节点池、维修、存储挂载、网络、配额，到 project-management-infra 提。打不开这个链接说明你没有那边的权限，直接在本仓库提，我们的工程师会处理
+- name: 规矩、流程、权限
+  url: https://github.com/northpeak/wiki/issues/new/choose
+  about: 本 org 本身的规矩和权限，到 wiki 提

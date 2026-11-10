@@ -1,0 +1,3 @@
+*                @northpeak/maintainers
+/recipes/        @northpeak/googlers @northpeak/training @northpeak/gke @northpeak/network
+/repro/          @northpeak/googlers @northpeak/training @northpeak/gke @northpeak/network

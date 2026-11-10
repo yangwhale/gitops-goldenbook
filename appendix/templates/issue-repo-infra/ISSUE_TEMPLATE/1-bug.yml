@@ -1,0 +1,91 @@
+name: 报错与故障
+description: 报错、卡住、起不来：切片、调度、节点池、维修、存储挂载、网络出问题
+labels:
+- type/bug
+body:
+- type: markdown
+  attributes:
+    value: 只有第一项**必填**：用自己的话描述问题就行。其余都是建议，愿意填就填，不填我们来补。
+- type: textarea
+  id: what
+  attributes:
+    label: 问题描述
+    description: 用自己的话说：出了什么错；有报错或事件就贴关键几行
+  validations:
+    required: true
+- type: dropdown
+  id: area
+  attributes:
+    label: 跟哪块有关
+    options:
+    - 切片调度与供给（gke-component-d、gke-component-c、gke-component-b、gke-component-a）
+    - device plugin
+    - Kueue / JobSet
+    - 节点池（创建、升级、扩缩）
+    - 维修与健康（含芯片、主机故障）
+    - 存储挂载（Lustre、GCSFuse、Hyperdisk 等 CSI）
+    - 网络：ICI / DCN / OCS
+    - 网络：VPC、NAT、DNS、多网卡
+    - 配额与容量
+    - 不知道 / 都不是
+    description: 不确定就选「不知道」，查清楚后由负责人打 area/* 标签
+  validations:
+    required: false
+- type: markdown
+  attributes:
+    value: '### 运行条件（建议填写）
+
+      能填多少填多少，写全了我们拿到就能复现；不清楚的空着，我们来补。'
+- type: input
+  id: cluster
+  attributes:
+    label: 集群与版本
+    description: GCP 项目、集群名和 location、GKE 版本
+    placeholder: my-project / my-cluster / us-central1，GKE 1.33.5-gke.1080000
+  validations:
+    required: false
+- type: input
+  id: pool
+  attributes:
+    label: 节点池
+    description: 机型、拓扑、节点数；预留、spot 还是 flex-start
+    placeholder: tpu7x-standard-4t，4x4x4，16 节点，预留
+  validations:
+    required: false
+- type: textarea
+  id: versions
+  attributes:
+    label: 组件版本
+    description: 各组件的镜像 tag 或 commit（gke-component-d、device plugin、Kueue、JobSet、CSI 驱动等）
+  validations:
+    required: false
+- type: textarea
+  id: repro
+  attributes:
+    label: 最小复现
+    description: 从零开始怎么做能看到同样的现象，附命令和 YAML
+    render: shell
+  validations:
+    required: false
+- type: textarea
+  id: kubectl
+  attributes:
+    label: kubectl 输出与事件
+    description: 相关对象的 kubectl get -o yaml、kubectl describe 和 events
+    render: shell
+  validations:
+    required: false
+- type: textarea
+  id: impact
+  attributes:
+    label: 影响
+    description: 卡住了哪些作业、多少节点
+  validations:
+    required: false
+- type: textarea
+  id: exp
+  attributes:
+    label: 实验结果（可选）
+    description: 做过的对照：每次改了什么、结果；建议用表格
+  validations:
+    required: false

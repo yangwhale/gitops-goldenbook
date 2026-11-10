@@ -1,0 +1,103 @@
+name: 性能不达预期
+description: 步时、吞吐、MFU、显存 / OOM 不达预期
+labels:
+- type/perf
+body:
+- type: markdown
+  attributes:
+    value: 只有第一项**必填**：用自己的话描述问题就行。其余都是建议，愿意填就填，不填我们来补。
+- type: textarea
+  id: numbers
+  attributes:
+    label: 问题描述
+    description: 用自己的话说：现在多少、期望多少、期望的依据（步时 / 吞吐 / MFU / 显存）
+  validations:
+    required: true
+- type: dropdown
+  id: area
+  attributes:
+    label: 跟哪块有关
+    options:
+    - MaxText
+    - JAX / XLA / libtpu
+    - kernel（Pallas、Tokamax 等）
+    - TPU 推理
+    - PyTorch on TPU
+    - 环境 / 版本 / 镜像 / 依赖
+    - 数据读取 / checkpoint
+    - 不知道 / 都不是
+    description: 不确定就选「不知道」，查清楚后由负责人打 area/* 标签
+  validations:
+    required: false
+- type: dropdown
+  id: kind
+  attributes:
+    label: 哪类
+    options:
+    - 回归（以前快，现在慢）
+    - 未达目标
+    - 优化机会
+  validations:
+    required: false
+- type: textarea
+  id: profile
+  attributes:
+    label: profile
+    description: XProf / trace 链接或截图；roofline 估算
+  validations:
+    required: false
+- type: markdown
+  attributes:
+    value: '### 运行条件（建议填写）
+
+      能填多少填多少，写全了我们拿到就能复现；不清楚的空着，我们来补。'
+- type: textarea
+  id: code
+  attributes:
+    label: 代码与版本
+    description: 仓库、分支、**commit**；jax / jaxlib / libtpu；镜像（如有）
+    placeholder: 'northpeak/maxtext @ modelx @ 1a2b3c4
+
+      jax 0.11.1 / libtpu 0.0.46
+
+      image ...@sha256:...'
+  validations:
+    required: false
+- type: input
+  id: hw
+  attributes:
+    label: 硬件与规模
+    description: 芯片型号 × 数量、拓扑、节点数
+    placeholder: v5p 64 芯（4x4x4），16 节点
+  validations:
+    required: false
+- type: textarea
+  id: model
+  attributes:
+    label: 模型、数据与并行
+    description: 模型（层数等改动）、数据集或 synthetic、步数、global batch、序列长度、并行配置
+    placeholder: ModelX 4 层冒烟，C4，2000 步，GBS 256，seq 4096，FSDP 8 × DP 8
+  validations:
+    required: false
+- type: textarea
+  id: cmd
+  attributes:
+    label: 启动命令或配置
+    description: 配置文件路径 + 完整命令；改过的参数写出来
+    render: shell
+  validations:
+    required: false
+- type: textarea
+  id: runid
+  attributes:
+    label: run-ID、日志或 GCS 路径
+    description: JobSet 名、TensorBoard / 日志 / 产物所在位置
+  validations:
+    required: false
+- type: textarea
+  id: exp
+  attributes:
+    label: 实验结果（可选）
+    description: 做过的对照实验：每次的 commit、改了什么、结果；建议用表格
+  validations:
+    required: false

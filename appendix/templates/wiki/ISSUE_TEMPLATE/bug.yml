@@ -1,0 +1,33 @@
+name: Bug
+description: 某处不对
+labels: ["type/bug"]
+body:
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤
+      description: 命令、commit、配置文件
+    validations:
+      required: true
+  - type: textarea
+    id: expect
+    attributes:
+      label: 期望 / 实际
+    validations:
+      required: true
+  - type: input
+    id: run
+    attributes:
+      label: 相关 run-ID
+  - type: textarea
+    id: env
+    attributes:
+      label: 环境
+      description: 芯片型号和数量、拓扑、软件版本
+  - type: dropdown
+    id: prio
+    attributes:
+      label: 优先级
+      options: [P0（阻塞）, P1, P2]
+    validations:
+      required: true

@@ -1,0 +1,58 @@
+name: 功能与开发任务
+description: 新功能、组件改动、重构 / CI / 工具、文档
+labels:
+- type/feat
+body:
+- type: markdown
+  attributes:
+    value: 只有第一项**必填**：用自己的话描述问题就行。其余都是建议，愿意填就填，不填我们来补。
+- type: textarea
+  id: goal
+  attributes:
+    label: 目标
+    description: 想要什么、为什么需要
+  validations:
+    required: true
+- type: dropdown
+  id: area
+  attributes:
+    label: 跟哪块有关
+    options:
+    - 切片调度与供给（gke-component-d、gke-component-c、gke-component-b、gke-component-a）
+    - device plugin
+    - Kueue / JobSet
+    - 节点池（创建、升级、扩缩）
+    - 维修与健康（含芯片、主机故障）
+    - 存储挂载（Lustre、GCSFuse、Hyperdisk 等 CSI）
+    - 网络：ICI / DCN / OCS
+    - 网络：VPC、NAT、DNS、多网卡
+    - 配额与容量
+    - 不知道 / 都不是
+    description: 不确定就选「不知道」，查清楚后由负责人打 area/* 标签
+  validations:
+    required: false
+- type: dropdown
+  id: kind
+  attributes:
+    label: 哪类
+    options:
+    - 新功能 / 功能需求
+    - 组件改动
+    - 重构 / CI / 工具（建好后标签改成 type/chore）
+    - 文档（建好后标签改成 type/docs）
+  validations:
+    required: false
+- type: textarea
+  id: done
+  attributes:
+    label: 验收标准
+    description: 可验证：一条命令、一个数值阈值、一个可观察的行为
+  validations:
+    required: false
+- type: textarea
+  id: deps
+  attributes:
+    label: 依赖
+    description: 依赖哪些 issue 或外部条件
+  validations:
+    required: false

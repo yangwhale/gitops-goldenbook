@@ -1,0 +1,39 @@
+name: 跟踪总表
+description: 默认不开。只在两种情况开：几个 issue 是同一个问题的不同方面；一个大任务要拆给不同的人
+title: 跟踪 <问题或大任务>
+labels:
+- tracker
+body:
+- type: markdown
+  attributes:
+    value: 只有第一项**必填**：用自己的话描述问题就行。其余都是建议，愿意填就填，不填我们来补。
+- type: textarea
+  id: goal
+  attributes:
+    label: 目标
+    description: 这几个问题合起来要达成什么
+  validations:
+    required: true
+- type: textarea
+  id: scope
+  attributes:
+    label: 范围
+    description: 做什么、**不做什么**
+  validations:
+    required: false
+- type: textarea
+  id: done
+  attributes:
+    label: 成功标准
+  validations:
+    required: false
+- type: textarea
+  id: timeline
+  attributes:
+    label: 时间线
+    description: 关键时间点
+  validations:
+    required: false
+- type: markdown
+  attributes:
+    value: 建好后把相关 issue 用 sub-issue 挂到下面。不按阶段、月份、仓库开；不往下套第三层。

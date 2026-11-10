@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+- name: 规矩、流程、权限
+  url: https://github.com/northpeak/wiki/issues/new/choose
+  about: 本 org 本身的规矩和权限，到 wiki 提

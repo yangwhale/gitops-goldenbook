@@ -1,0 +1,64 @@
+name: 功能与开发任务
+description: 新模型接入、新功能、kernel、重构 / CI / 工具、文档
+labels:
+- type/feat
+body:
+- type: markdown
+  attributes:
+    value: 只有第一项**必填**：用自己的话描述问题就行。其余都是建议，愿意填就填，不填我们来补。
+- type: textarea
+  id: goal
+  attributes:
+    label: 目标
+    description: 想要什么、为什么需要
+  validations:
+    required: true
+- type: dropdown
+  id: area
+  attributes:
+    label: 跟哪块有关
+    options:
+    - MaxText
+    - JAX / XLA / libtpu
+    - kernel（Pallas、Tokamax 等）
+    - TPU 推理
+    - PyTorch on TPU
+    - 环境 / 版本 / 镜像 / 依赖
+    - 数据读取 / checkpoint
+    - 不知道 / 都不是
+    description: 不确定就选「不知道」，查清楚后由负责人打 area/* 标签
+  validations:
+    required: false
+- type: dropdown
+  id: kind
+  attributes:
+    label: 哪类
+    options:
+    - 新模型接入
+    - 新功能 / 功能需求
+    - kernel
+    - 重构 / CI / 工具（建好后标签改成 type/chore）
+    - 文档（建好后标签改成 type/docs）
+  validations:
+    required: false
+- type: textarea
+  id: done
+  attributes:
+    label: 验收标准
+    description: 可量化：一条命令、一个数值阈值（如对齐到 1e-4、≥80% roofline）、一个可观察的行为
+  validations:
+    required: false
+- type: textarea
+  id: ref
+  attributes:
+    label: 参考实现与权重来源
+    description: 新模型接入时填：参考实现、配置、权重在哪
+  validations:
+    required: false
+- type: textarea
+  id: deps
+  attributes:
+    label: 依赖
+    description: 依赖哪些 issue 或外部条件
+  validations:
+    required: false

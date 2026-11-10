@@ -1,0 +1,36 @@
+name: 设计与调研
+description: 方案设计、技术调研、RFC 讨论
+labels:
+- type/design
+body:
+- type: markdown
+  attributes:
+    value: 只有第一项**必填**：用自己的话描述问题就行。其余都是建议，愿意填就填，不填我们来补。
+- type: textarea
+  id: problem
+  attributes:
+    label: 问题描述
+    description: 要解决什么问题、影响多大
+  validations:
+    required: true
+- type: textarea
+  id: options
+  attributes:
+    label: 方案与取舍
+    description: 候选方案，各自的代价；倾向哪个、为什么
+  validations:
+    required: false
+- type: textarea
+  id: decision
+  attributes:
+    label: 结论
+    description: 讨论后的决定；还没定就写「待定」
+  validations:
+    required: false
+- type: textarea
+  id: doc
+  attributes:
+    label: 设计文档
+    description: wiki 里的 RFC 链接（大任务必须有）
+  validations:
+    required: false

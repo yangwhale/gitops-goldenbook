@@ -1,0 +1,31 @@
+# PR 规范检查：必须关联 issue；「和原计划的偏差」一栏不能删、不能空。
+# 新仓库建好时把这个文件原样复制过去。
+name: pr-check
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+permissions:
+  pull-requests: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检查 PR 正文
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          python3 - <<'PY'
+          import os, re, sys
+          body = os.environ.get("BODY") or ""
+          errs = []
+          if not re.search(r'(?i)\b(close[sd]?|fix(e[sd])?|resolve[sd]?|refs?)\s+([\w.-]+/[\w.-]+)?#\d+', body):
+              errs.append("没有关联 issue：正文要写 `Closes #号` 或 `Refs <org>/<repo>#号`")
+          m = re.search(r'##\s*和原计划的偏差[^\n]*\n(.*?)(?=\n##\s|\Z)', body, re.S)
+          if not m:
+              errs.append("缺少「## 和原计划的偏差」一栏（没有偏差写「无」，但不能删）")
+          elif not re.sub(r'<!--.*?-->', '', m.group(1), flags=re.S).strip():
+              errs.append("「和原计划的偏差」一栏是空的（没有偏差写「无」）")
+          for e in errs:
+              print(f"::error::{e}")
+          sys.exit(1 if errs else 0)
+          PY

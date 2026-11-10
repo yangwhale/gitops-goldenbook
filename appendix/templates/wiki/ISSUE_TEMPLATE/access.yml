@@ -1,0 +1,22 @@
+name: 加人 / 撤人
+description: 权限变更，留档用
+title: "[权限] <加入|移出> @账号"
+labels: ["access"]
+body:
+  - type: input
+    id: who
+    attributes: {label: GitHub 账号}
+    validations: {required: true}
+  - type: dropdown
+    id: action
+    attributes: {label: 操作, options: [加入, 移出, 调整]}
+    validations: {required: true}
+  - type: dropdown
+    id: team
+    attributes:
+      label: 团队（一人只进一个；客户同时做训练和 GKE / 网络的选 training）
+      options: [googlers（Google 员工）, training（客户训练组）, gke（客户 GKE 组）, network（客户网络组）, partners（合作方）, observers（旁观者，只读）, maintainers（管理员）]
+    validations: {required: true}
+  - type: textarea
+    id: why
+    attributes: {label: 原因}

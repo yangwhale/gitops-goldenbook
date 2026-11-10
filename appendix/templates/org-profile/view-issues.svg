@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="88" viewBox="0 0 320 88">
+  <rect x="2" y="2" width="316" height="84" rx="13" fill="#ffffff" stroke="#0969da" stroke-width="4"/>
+  <g fill="#0969da" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+    <rect x="36" y="28" width="32" height="5" rx="2.5"/>
+    <rect x="36" y="41.5" width="32" height="5" rx="2.5"/>
+    <rect x="36" y="55" width="32" height="5" rx="2.5"/>
+    <text x="86" y="56" font-size="32" font-weight="700">查看 issue</text>
+  </g>
+</svg>

@@ -1,0 +1,32 @@
+name: 任务
+description: 一件开发工作
+labels: ["type/feat"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: 目标
+      description: 做完以后能做到什么。能给一条可执行的命令最好
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: 为什么做
+      description: 背景、依赖哪些 issue
+  - type: dropdown
+    id: size
+    attributes:
+      label: 大小
+      options:
+        - S（小任务，不需要 RFC）
+        - L（大任务，先写 RFC）
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: 怎么算完成
+      description: 可验证的验收标准
+    validations:
+      required: true
