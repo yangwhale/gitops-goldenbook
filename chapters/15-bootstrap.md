@@ -3,6 +3,9 @@
 可以照着敲的步骤。前面各章讲每样东西为什么这样设计，这里只讲怎么做、按什么顺序做。
 一个熟练的人大约一天做完；第一次做留两天。
 
+> **更快的路**：这一章的第 1–14 步已经写成脚本。填一份 `org-config.yaml`，跑 `bootstrap/bootstrap.py plan` 预演、`apply` 执行、`verify.py` 验收、`smoke.py` 冒烟，人只需要在网页上建 org 和接受邀请。
+> AI 助手照 [`AGENT-BOOTSTRAP.md`](../AGENT-BOOTSTRAP.md) 做。下面的手工步骤留作理解脚本、排查问题时的参考。
+
 ## 准备
 
 全程用 `gh` 命令行和 `git`。令牌权限：
@@ -257,7 +260,7 @@ N=1
 gh project field-create $N --owner $ORG --name Size --data-type SINGLE_SELECT --single-select-options "S,L"
 ```
 
-以下在网页上做：
+以下在网页上做（`bootstrap.py` 改为从一个公开的模板项目复制看板，这几项都随复制带过来，不用手点）：
 
 1. Settings → Visibility：**Private**
 2. Settings → README：「状态由规则自动改，别手动拖；规矩见 `<org>/wiki` 的 AGENTS.md。」
