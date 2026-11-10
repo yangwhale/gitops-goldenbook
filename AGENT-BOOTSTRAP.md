@@ -145,7 +145,18 @@ verify：N 项 PASS，0 FAIL，M 项 WARN（逐条列）
 4. 给客户发通知（第 15 章第 16 步有样例）
 ```
 
-然后用第 15 章第 14 步的表，**你自己**走一遍冒烟测试：建一条测试 issue、加看板、提一个 PR、合并、看 issue 是否自动关闭，用完删掉测试 issue。
+然后**你自己**跑冒烟测试（第 15 章第 14 步的自动部分）：
+
+```bash
+python3 bootstrap/smoke.py org-config.yaml
+```
+
+它建一条测试 issue → 加看板 → 在自研代码仓提 PR → 合并 → 检查 issue 自动关闭、看板 Done → 删掉测试 issue 和分支。全部通过才算建完。
+
+## 想先演练一遍
+
+第一次做、或者改过脚本，先在一个**专门演练用的空 org** 里从头跑一遍第 1–4 步加 smoke，确认没问题，再用 `bootstrap/teardown.py` 清掉（它会删仓库，绝不要对客户的 org 跑）。
+本书的脚本就是这样在一个空沙箱 org 里实测过的：apply 一次跑完，verify 118 项全部 PASS，重跑 apply 每一步都是「已是最新」，smoke 5/5。
 
 ## 你不能做的
 

@@ -56,3 +56,4 @@
 | O09 | 按冷读意见修改 | 完成：撤下评审记录；去掉可推断原项目的线索；补看板权限、单 issue 仓、换领域清单、测试账号；check_dir_list 参数化 |
 | O10 | 终检：去标识、链接、脚本测试、README 定稿 | 完成：敏感词 0 命中；20 个 YAML 可解析；脚本语法与正反例测试通过；链接与章节引用 0 问题；历史压成单个提交 |
 | 优化 | B01 | 给 bot 的入口：AGENT-BOOTSTRAP.md；org-config 配置；bootstrap.py（plan/render/apply）；verify.py；公开的看板模板项目 | 完成 |
+| 优化 | B02 | 在空沙箱 org 实跑：apply 一次成功、verify 118/118、重跑幂等、smoke.py 5/5；补 smoke.py、teardown.py | 完成 |
