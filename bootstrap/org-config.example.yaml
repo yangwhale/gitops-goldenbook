@@ -1,0 +1,55 @@
+# org-config.yaml —— 建一个新 org 需要人拍板的全部决定。
+# bot 先按 AGENT-BOOTSTRAP.md 第 1 步向人问清这些，填好再跑 bootstrap.py。
+# 字段含义见每行注释；带「必填」的不能留空。
+
+org: acme-tt                 # 必填。GitHub org 名，网页上先建好（API 建不了 org）。不含客户名、产品代号
+org_title: AcmeTT            # 必填。org 名的展示写法（首字母大写），替换模板里的 NorthPeak
+vendor: Google               # 厂商名，替换模板里的「Google」
+model: ModelY                # 客户模型的叫法，替换模板里的 ModelX；没有就写项目代号
+dev_branch: modely           # 代码仓开发分支名（不带代数，第 9 章），替换模板里的 modelx
+phase: poc                   # 截图目录 assets/issues/<phase>/ 的阶段名
+
+# 必填。one：只建 project-management；two：再建 project-management-infra（第 2 章 2.3 的三个问题都答「是」才选 two）
+issue_repos: two
+
+# 必填。Owner 账号（只有 Owner 能邀请成员）。运行脚本的人必须是其中之一
+owners: [<你的 GitHub 账号>]
+
+# 成员按团队列。一人只进一个团队。客户同时做训练和 GKE 的只进 training
+# issue_repos 为 one 时，客户全放 training（脚本会把它当作唯一的客户子团队）
+members:
+  maintainers: [<你的 GitHub 账号>]     # Owner 也放这里
+  googlers: []               # 厂商工程师的 GitHub 账号
+  training: []               # 客户训练组
+  gke: []
+  network: []
+  partners: []
+  observers: []
+
+# 代码仓。kind：own（自研，空仓起步）| long-fork（长期分叉的上游副本）| follow（跟随上游的副本）
+# joint: true 表示客户可写（customer 团队 Write）；false 表示只有厂商能看
+# agents_branches：要同步 AGENTS.md 的分支（长期分叉通常是默认分支 + 开发分支）
+code_repos:
+  - name: maxtext
+    kind: long-fork
+    upstream: https://github.com/AI-Hypercomputer/maxtext.git
+    default_branch: main
+    agents_branches: [main, modely]
+    joint: true
+  - name: numerics-kit
+    kind: own
+    default_branch: main
+    agents_branches: [main]
+    joint: true
+
+# 固定路由（第 6 章 6.5）。没有就删掉整段
+fixed_route:
+  what: MaxText 相关、需要上游 MaxText 团队跟进的 issue
+  assignee: <上游对接人的 GitHub 账号>
+
+# 开不开 GitHub Actions（第 14 章 14.3）。disabled | enabled
+actions: disabled
+
+# 看板模板：一个公开的 GitHub Project，带好了 6 个状态、Size、Iteration、7 条自动规则和两个视图。
+# bootstrap.py 用 copyProjectV2 把它复制进新 org。
+board_template: https://github.com/users/yangwhale/projects/1

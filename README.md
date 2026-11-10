@@ -7,6 +7,10 @@
 书里的规则都在那个 org 里实际执行过，改过好几轮，每次改动都有原因。例子已经全部替换成虚构的：
 示例 org 叫 `northpeak`，示例模型叫 ModelX，人名、issue 号、commit 号都是编的。
 
+## AI 助手从这里开始
+
+用户让你照这本书给新客户建 org：读 [`AGENT-BOOTSTRAP.md`](AGENT-BOOTSTRAP.md)，照着做。配套的脚本在 [`bootstrap/`](bootstrap/)：`bootstrap.py`（按配置建站，可重复跑，有只读的 plan）和 `verify.py`（只读验收）。
+
 ## 这本书给谁看
 
 | 读者 | 读什么 |

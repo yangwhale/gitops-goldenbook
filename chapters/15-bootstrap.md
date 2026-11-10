@@ -376,10 +376,11 @@ invite() {  # 账号 团队slug [admin]
   gh api -X POST orgs/$ORG/invitations -F invitee_id=$uid -F "team_ids[]=$tid" -f role=${3:-direct_member} \
     --jq '"已邀请 \(.login) → '$2' (\(.role))"'
 }
-invite alice-g maintainers admin    # Owner：邀请时直接给 admin，不用等接受后再升
-invite bob-g googlers
-invite carol-c training
-invite dave-c gke
+invite <厂商 Owner 账号> maintainers admin    # Owner：邀请时直接给 admin，不用等接受后再升
+invite <厂商工程师账号> googlers
+invite <客户训练组账号> training
+invite <客户 GKE 组账号> gke
+# ⚠ 书里的 alice-g、bob-g 这些示例名在 GitHub 上可能是真实的陌生人，别照抄
 ```
 
 查还没接受的邀请：`gh api orgs/$ORG/invitations --jq '.[]|"\(.login // .email) \(.created_at)"'`。邀请 7 天过期。
